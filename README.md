@@ -2,7 +2,7 @@
 
 Neuromorphic implementation of the DBSCAN algorithm
 
-From [https://neuromorphic.eecs.utk.edu/](TENNLab)
+From [TENNLab](https://neuromorphic.eecs.utk.edu/)
 
 Points of contact: James S. Plank, Charles P. Rizzo
 
