@@ -73,7 +73,7 @@ archivePrefix arXiv
 url           https://arxiv.org/abs/2401.15212
 ```
 
-The following paper (when we write it) details this implementation.  Our nomenclature
+The following paper details this implementation.  Our nomenclature
 and networks follow this description.
 
 ```
