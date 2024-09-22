@@ -1,7 +1,6 @@
 This directory contains code for executing and testing the DBSCAN algorithm neuromorphically.
 
-
-James S. Plank, Charles P. Rizzo
+Points of Contact: James S. Plank, Charles P. Rizzo
 
 ----------
 # Information on the outputs of these programs
