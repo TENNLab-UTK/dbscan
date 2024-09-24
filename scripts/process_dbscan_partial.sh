@@ -20,14 +20,18 @@ fi
 
 # Step 0 -- makes sure you have all of the right executables.
 
-if [ ! -x $fr/cpp-apps/bin/processor_tool_risp ]; then
-  echo "Making the processor tool" >&2
+if [ -f $fr/src/processor_tool.cpp ]; then
+  pt=$fr/bin/processor_tool_risp
+  if [ ! -x $pt ]; then
+    echo "Making the processor tool" >&2
+    ( cd $fr ; make bin/processor_tool_risp ) >&2
+  fi
+else
+  pt=$fr/cpp-apps/bin/processor_tool_risp
   ( cd $fr/cpp-apps ; make app=processor_tool proc=risp ) >&2
 fi
 
-if [ ! -x $fr/cpp-apps/bin/processor_tool_risp ]; then
-  exit 1
-fi
+if [ ! -x $pt ]; then exit 1; fi
 
 if [ ! -x $fr/bin/network_tool ]; then
   echo "Making the network tool" >&2
@@ -57,7 +61,7 @@ if [ $fs = SYSTOLIC -a ! -x bin/output_systolic_partial ]; then make bin/output_
   echo '      "min_potential": 0.0, '
   echo '      "min_threshold": 1.0, '
   echo '      "min_weight": -1.0 } '
-  echo EMPTYNET tmp-empty.txt ) | $fr/cpp-apps/bin/processor_tool_risp
+  echo EMPTYNET tmp-empty.txt ) | $pt
 
 # Next, make the network
 
@@ -85,7 +89,7 @@ fi
 
 # Now, run the processor tool and grab the outputs.
 
-( echo ML tmp-dbscan-network.txt ; cat tmp-input-spikes.txt ; echo RUN $rt ; echo $o ) | $fr/cpp-apps/bin/processor_tool_risp > tmp-ptool-output.txt
+( echo ML tmp-dbscan-network.txt ; cat tmp-input-spikes.txt ; echo RUN $rt ; echo $o ) | $pt > tmp-ptool-output.txt
 
 if [ $fs = FLAT ]; then
   bin/output_flat < tmp-ptool-output.txt

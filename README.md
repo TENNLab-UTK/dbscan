@@ -166,8 +166,13 @@ UNIX>
 ----------
 ## Outputs of the other src/dbscan_xxx programs
 
-The outputs of these programs are commands for the `network_tool` program in the TENNLab software
-framework.  This is slated to be open-sourced by the end of October, 2024.  Until then, here is
+The outputs of these programs are commands for the `network_tool` program in the 
+[TENNLab open-source software framework](https://github.com/TENNLab-UTK/framework-open).
+In the examples below, I set the `$fr` environment variable in my shell to the open-source
+framework, so if you want to follow along, then clone the framework and set your `$fr`
+variable.  
+
+If you are not using the framework, then here
 a description of the commands that are output by these programs.  You should be able to interpret
 these easily in whatever software you use for spiking neural networks.
 
@@ -341,12 +346,13 @@ This is all quite straightforward.  The `AS` commands are for the `processor_too
 ------------------------------
 ### Running the network by hand
 
-You can now run the network on the input using the `processor_tool` from the framework:
+You can now run the network on the input using the `processor_tool` from the
+open-source framework:
 
 ```
-UNIX> ( cd $fr/cpp-apps ; make app=processor_tool proc=risp )
+UNIX> ( cd $fr ; make bin/processor_tool_risp )
 # This makes sure the processor_tool is compiled for risp.
-UNIX> $fr/cpp-apps/bin/processor_tool_risp
+UNIX> $fr/bin/processor_tool_risp
 ML tmp-network.txt                    # Load the network, which also sets up the processor.
 AS 5 0 1                              # Copy/paste the spikes from above.
 AS 6 0 1
@@ -446,7 +452,7 @@ You simply pipe the output from above into this program (well, you use "OC" to e
 counts rather than "OT" to see the times -- I just wanted to show you the times above).
 
 ```
-UNIX> ( echo ML tmp-network.txt ; cat tmp-spikes.txt ; echo RUN 5 ; echo OC ) | $fr/cpp-apps/bin/processor_tool_risp | bin/output_flat
+UNIX> ( echo ML tmp-network.txt ; cat tmp-spikes.txt ; echo RUN 5 ; echo OC ) | $fr/bin/processor_tool_risp | bin/output_flat
 ......
 B.B...
 .C....
@@ -548,7 +554,7 @@ You also need to look at the timing of the output spikes to determine which even
 are core/border.  Let's look at the output of the processor_tool:
 
 ```
-UNIX> ( echo ML tmp-network.txt ; cat tmp-spikes.txt ; echo RUN 20 ; echo OT ) | $fr/cpp-apps/bin/processor_tool_risp
+UNIX> ( echo ML tmp-network.txt ; cat tmp-spikes.txt ; echo RUN 20 ; echo OT ) | $fr/bin/processor_tool_risp
 node 24(Core[0][1]) spike times:
 node 25(Core[1][1]) spike times:
 node 26(Core[2][1]) spike times: 4.0
@@ -576,7 +582,7 @@ The program `bin/output_systolic_full` does that calculation for you:
 ```
 UNIX> bin/output_systolic_full
 usage: bin/output_systolic_full e C
-UNIX> ( echo ML tmp-network.txt ; cat tmp-spikes.txt ; echo RUN 20 ; echo OT ) | $fr/cpp-apps/bin/processor_tool_risp | bin/output_systolic_full 1 6
+UNIX> ( echo ML tmp-network.txt ; cat tmp-spikes.txt ; echo RUN 20 ; echo OT ) | $fr/bin/processor_tool_risp | bin/output_systolic_full 1 6
 ......
 B.B...
 .C....
