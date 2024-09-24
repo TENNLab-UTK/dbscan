@@ -80,9 +80,10 @@ and networks follow this description.
 author        C. P. Rizzo and J. S. Plank
 title         A Neuromorphic Implemenation of the {DBSCAN} Algorithm
 year          2024
-eprint        -
-archivePrefix -
-url           -
+eprint        2409.14298
+archivePrefix arXiv
+url           https://arxiv.org/abs/2409.14298
+howpublished  https://arxiv.org/abs/2409.14298
 ```
 
 ----------
