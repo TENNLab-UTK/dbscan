@@ -73,7 +73,8 @@ archivePrefix arXiv
 url           https://arxiv.org/abs/2401.15212
 ```
 
-The following paper details this implementation.  Our nomenclature
+The following paper provides the reference material for the implementation
+in this repo.  Our nomenclature
 and networks follow this description, and when we talk about "the paper" below,
 this is the paper to which we are referring.
 
