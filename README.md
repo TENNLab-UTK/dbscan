@@ -74,7 +74,8 @@ url           https://arxiv.org/abs/2401.15212
 ```
 
 The following paper details this implementation.  Our nomenclature
-and networks follow this description.
+and networks follow this description, and when we talk about "the paper" below,
+this is the paper to which we are referring.
 
 ```
 author        C. P. Rizzo and J. S. Plank
@@ -83,7 +84,7 @@ year          2024
 eprint        2409.14298
 archivePrefix arXiv
 url           https://arxiv.org/abs/2409.14298
-howpublished  https://arxiv.org/abs/2409.14298
+howpublished  \url{https://arxiv.org/abs/2409.14298}
 ```
 
 ----------
