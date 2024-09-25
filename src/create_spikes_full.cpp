@@ -23,14 +23,14 @@ int main(int argc, char **argv)
   string as;
 
   if (argc != 2) {
-    fprintf(stderr, "usage: bin/create_spikes_full FLAT|SYSTOLIC < file\n");
+    fprintf(stderr, "usage: bin/create_spikes_full FLAT|SYSTOLIC|SYSTOLIC_AS < file\n");
     exit(1);
   }
   
   as = argv[1];
 
-  if (as != "SYSTOLIC" && as != "FLAT") { 
-    cerr << "Last argument must be SYSTOLIC or FLAT\n"; 
+  if (as != "SYSTOLIC" && as != "FLAT" && as != "SYSTOLIC_AS") { 
+    cerr << "Last argument must be FLAT, SYSTOLIC or SYSTOLIC_AS\n"; 
     exit(1); 
   }
 
@@ -57,6 +57,12 @@ int main(int argc, char **argv)
   if (as == "SYSTOLIC") {
     for (i = 0 ; i < (int) events.size(); i++) {
       printf("ASR %d %s\n", i, events[i].c_str());
+    }
+  } else if (as == "SYSTOLIC_AS") {
+    for (i = 0 ; i < (int) events.size(); i++) {
+      for (j = 0 ; j < (int) events[i].size(); j++) {
+        if (events[i][j] == '1') printf("AS %d %d 1\n", i, j);
+      }
     }
   } else {
     for (i = 0 ; i < (int) events.size(); i++) {

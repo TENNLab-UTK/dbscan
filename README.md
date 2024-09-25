@@ -321,7 +321,7 @@ Now, we want to turn our DBSCAN input file into spikes for this network.  To do 
 
 ```
 UNIX> bin/create_spikes_full
-usage: bin/create_spikes_full FLAT|SYSTOLIC < file
+usage: bin/create_spikes_full FLAT|SYSTOLIC|SYSTOLIC_AS < file
 UNIX> bin/create_spikes_full FLAT < txt/example.txt > tmp-spikes.txt
 UNIX> cat tmp-spikes.txt
 AS 5 0 1
@@ -609,6 +609,9 @@ BCC...
 UNIX> 
 ```
 
+As an FYI, if you give `SYSTOLIC-AS` to `bin/create_spikes_full`, then it will emit
+`AS` commands rather than `ASR` commands.  That's convenient when your input grids are sparse.
+
 ------------------------------------------------------------
 # Testing
 
@@ -656,6 +659,46 @@ UNIX>
 
 The script `scripts/test_full.sh` repetitively calls this program and makes sure
 that it prints "ok".
+
+------------------------------
+## bin/generate_test_grid
+
+If you want to generate a more specific problem, then use `bin/generate_test_grid`:
+
+UNIX> bin/generate_test_grid 
+usage: bin/generate_test_grid r c density(0-1)
+UNIX> bin/generate_test_grid 10 50 0.3 > tmp-grid.txt          # Generate a 10x50 grid that's 30% full.
+UNIX> cat tmp-grid.txt
+10001000100100000011101100000000000000100000000110
+00000101001011010000101000000011000011001110111100
+10001001101101100110010101100000100000011000010010
+00000001110001010000001000101001110001100101001000
+10001001000000100001010000100101000011111000000011
+10110000110001110110001010001010000000000101001000
+00011001000100011100000010001010100000010001000010
+10100100010000110000000010011100000001100011000100
+00010010000110110110001100010100000000000010111100
+10010001001010010100010001101111101111001001000001
+UNIX> sh scripts/process_dbscan_full.sh 2 10 tmp-grid.txt SYSTOLIC $fr    # Run the systolic version of DBSCAN on it.
+........B..B.......BB.BB..............B...........
+.....B.B..B.BB.B....B.B.............BB..BBB.......
+.......BC.BB.CB..B...C.B...............CC.........
+.......CCC...C.C......B...B.B..BB....BC..C.B......
+.......B......C....B.B....B..B.B....BBCCB.........
+B.BB....BB...CCC.BB.........C.C..........C.B......
+...BB......B...CCC..........C.C.B......B...B......
+B.C...........CC...........CCC............BB......
+...B........B.BC.BB........C.C....................
+B..B........B..B.B.......BB.BBBB..................
+UNIX> sh scripts/process_dbscan_full.sh 2 10 tmp-grid.txt SYSTOLIC $fr | openssl md5   # Demonstrate that all three programs give the same output.
+7aaf361b3beb3aa735e8e83ee7dc753e
+UNIX> sh scripts/process_dbscan_full.sh 2 10 tmp-grid.txt FLAT $fr | openssl md5
+7aaf361b3beb3aa735e8e83ee7dc753e
+UNIX> bin/dbscan 2 10 tmp-grid.txt 10 50 0 0 | openssl md5
+7aaf361b3beb3aa735e8e83ee7dc753e
+UNIX> 
+```
+
 
 ------------------------------
 # Partial dbscan

@@ -9,6 +9,7 @@ all: bin/dbscan_flat_full \
      bin/create_spikes_partial \
      bin/random_dbscan_full \
      bin/random_dbscan_partial \
+     bin/generate_test_grid \
      bin/dbscan
 
 clean:
@@ -52,3 +53,6 @@ bin/random_dbscan_full: src/random_dbscan_full.cpp
 
 bin/random_dbscan_partial: src/random_dbscan_partial.cpp
 	$(CPP) $(FLAGS) -Iinclude -std=c++11 -o bin/random_dbscan_partial src/random_dbscan_partial.cpp
+
+bin/generate_test_grid: src/generate_test_grid.cpp
+	$(CPP) $(FLAGS) -Iinclude -std=c++11 -o bin/generate_test_grid src/generate_test_grid.cpp

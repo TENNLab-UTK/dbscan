@@ -24,7 +24,10 @@ if [ -f $fr/src/processor_tool.cpp ]; then
   fi
 else
   pt=$fr/cpp-apps/bin/processor_tool_risp
-  ( cd $fr/cpp-apps ; make app=processor_tool proc=risp ) >&2
+  if [ ! -x $pt ]; then
+    echo "Making the processor tool" >&2
+    ( cd $fr/cpp-apps ; make app=processor_tool proc=risp ) >&2
+  fi
 fi
 
 if [ ! -x $pt ]; then exit 1; fi

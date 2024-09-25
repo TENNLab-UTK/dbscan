@@ -25,7 +25,8 @@ int main(int argc, char **argv)
   string as;
 
   if (argc != 7) {
-    fprintf(stderr, "usage: bin/create_spikes_partial I_R I_C sr sc epsilon FLAT|SYSTOLIC < file\n");
+    fprintf(stderr, "usage: bin/create_spikes_partial I_R I_C sr sc epsilon %s < file\n", 
+            "FLAT|SYSTOLIC|SYSTOLIC_AS");
     exit(1);
   }
   
@@ -36,9 +37,9 @@ int main(int argc, char **argv)
   e = atoi(argv[5]);
   as = argv[6];
 
-  if (as != "SYSTOLIC" && as != "FLAT") { 
-    cerr << "Last argument must be SYSTOLIC or FLAT\n"; 
-    exit(1); 
+  if (as != "SYSTOLIC" && as != "FLAT" && as != "SYSTOLIC_AS") {
+    cerr << "Last argument must be FLAT, SYSTOLIC or SYSTOLIC_AS\n";
+    exit(1);
   }
 
   /* Read in the events. */
@@ -89,6 +90,12 @@ int main(int argc, char **argv)
   if (as == "SYSTOLIC") {
     for (i = 0 ; i < (int) spike_raster.size(); i++) {
       printf("ASR %d %s\n", i, spike_raster[i].c_str());
+    }
+  } else if (as == "SYSTOLIC_AS") {
+    for (i = 0 ; i < (int) spike_raster.size(); i++) {
+      for (j = 0 ; j < (int) spike_raster[i].size(); j++) {
+        if (spike_raster[i][j] == '1') printf("AS %d %d 1\n", i, j);
+      }
     }
   } else {
     for (i = 0 ; i < (int) spike_raster.size(); i++) {
