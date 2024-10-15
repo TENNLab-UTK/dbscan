@@ -665,6 +665,7 @@ that it prints "ok".
 
 If you want to generate a more specific problem, then use `bin/generate_test_grid`:
 
+```
 UNIX> bin/generate_test_grid 
 usage: bin/generate_test_grid r c density(0-1)
 UNIX> bin/generate_test_grid 10 50 0.3 > tmp-grid.txt          # Generate a 10x50 grid that's 30% full.
