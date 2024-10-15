@@ -1,4 +1,4 @@
-This directory contains code for executing and testing the DBSCAN algorithm neuromorphically.
+Code for executing and testing the DBSCAN algorithm neuromorphically.
 
 Points of Contact: James S. Plank, Charles P. Rizzo
 
