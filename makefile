@@ -16,7 +16,7 @@ clean:
 	rm -f bin/*
 
 CXX?=g++
-FLAGS = -Wall -Wextra --pedantic $(CFLAGS)
+FLAGS= -Wall -Wextra --pedantic $(CFLAGS)
 
 bin/dbscan: src/dbscan.cpp
 	$(CXX) $(FLAGS) -o bin/dbscan src/dbscan.cpp
