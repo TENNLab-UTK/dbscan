@@ -10,7 +10,15 @@ all: bin/dbscan_flat_full \
      bin/random_dbscan_full \
      bin/random_dbscan_partial \
      bin/generate_test_grid \
-     bin/dbscan
+     bin/dbscan \
+	 	 bin/3d_dbscan \
+		 bin/3d_dbscan_flat_full \
+		 bin/3d_output_flat \
+		 bin/3d_dbscan_systolic_full \
+		 bin/3d_output_systolic_full \
+		 bin/3d_generate_test_grid \
+		 bin/3d_random_dbscan_full
+
 
 clean:
 	rm -f bin/*
@@ -20,6 +28,27 @@ FLAGS= -Wall -Wextra --pedantic $(CFLAGS)
 
 bin/dbscan: src/dbscan.cpp
 	$(CXX) $(FLAGS) -o bin/dbscan src/dbscan.cpp
+
+bin/3d_dbscan: src/3d_dbscan.cpp
+	$(CXX) $(FLAGS) -o bin/3d_dbscan src/3d_dbscan.cpp
+
+bin/3d_dbscan_flat_full: src/3d_dbscan_flat_full.cpp
+	$(CXX) $(FLAGS) -o bin/3d_dbscan_flat_full src/3d_dbscan_flat_full.cpp
+
+bin/3d_output_flat: src/3d_output_flat.cpp
+	$(CXX) $(FLAGS) -o bin/3d_output_flat src/3d_output_flat.cpp
+
+bin/3d_dbscan_systolic_full: src/3d_dbscan_systolic_full.cpp
+	$(CXX) $(FLAGS) -o bin/3d_dbscan_systolic_full src/3d_dbscan_systolic_full.cpp
+
+bin/3d_output_systolic_full: src/3d_output_systolic_full.cpp
+	$(CXX) $(FLAGS) -o bin/3d_output_systolic_full src/3d_output_systolic_full.cpp
+
+bin/3d_generate_test_grid: src/3d_generate_test_grid.cpp
+	$(CXX) $(FLAGS) -Iinclude -std=c++11 -o bin/3d_generate_test_grid src/3d_generate_test_grid.cpp
+
+bin/3d_random_dbscan_full: src/3d_random_dbscan_full.cpp
+	$(CXX) $(FLAGS) -Iinclude -std=c++11 -o bin/3d_random_dbscan_full src/3d_random_dbscan_full.cpp
 
 bin/dbscan_flat_full: src/dbscan_flat_full.cpp
 	$(CXX) $(FLAGS) -o bin/dbscan_flat_full src/dbscan_flat_full.cpp
