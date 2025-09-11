@@ -65,12 +65,12 @@ int main(int argc, char **argv)
     for (j = 0; j < (int) events[i].size(); j++) {
       for (k = 0; k < (int) events[i][j].size(); k++) {
         if (events[i][j][k] != '0' && events[i][j][k] != '1') {
-          fprintf(stderr, "Non-zero/one character at frame %i row %d col %d\n", i, j, k);
+          fprintf(stderr, "Non-zero/one character at frame %d row %d col %d\n", i, j, k);
           exit(1);
         }
       }
       if (events[i][j].size() != events[0][0].size()) {
-      fprintf(stderr, "Error -- frame %d: lines %d and %d are different sizes\n", i, j, 0);
+        fprintf(stderr, "Error -- frame %d: lines %d and %d are different sizes\n", i, j, 0);
       }
     }
     if (events[i].size() != events[0].size()) {
@@ -91,7 +91,7 @@ int main(int argc, char **argv)
   } else if (as == "FLAT"){
     for (i = 0 ; i < (int) events[0].size(); i++) {
       for (j = 0 ; j < (int) events[0][i].size(); j++) {
-        if (events[0][i][j] == '1') printf("AS %d 0 1\n", i * (int) events[0].size() + j);
+        if (events[0][i][j] == '1') printf("AS %d 0 1\n", i * (int) events[0][0].size() + j);
       }
     }
   } else if (as == "3D_FLAT"){

@@ -766,5 +766,4 @@ UNIX>
 # TODO:
 - events_to_3d_frames.cpp
   - Take file of ebc events and do that thang. Use this for testing.
-- **ALL** the same 3D programs for partial dbscan...
 - Documentation..

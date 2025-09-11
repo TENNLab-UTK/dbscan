@@ -1,4 +1,4 @@
-/* This program creates a spiking neural network for performing DBSCAN on an input grid of events,
+/* This program creates a spiking neural network for performing DBSCAN on a partial input grid of events,
    using the systolic construction. */
 
 /* Charles P. Rizzo, James S. Plank, University of Tennessee, 2024 */
@@ -18,31 +18,35 @@ using namespace std;
 
 int main(int argc, char **argv)
 {
-  int e, mp, mem_layer;
+  int e, mp, e_t, mem_layer, delay;
+  int tr, tc;            // Total rows and columns
   map <string, map <int, map <int, int> > > neuron_numbers;
   int tn;
-  int i, j, r, c, R, C, e_t;
-  int from, to, delay;
+  int i, j, r, c, I_R, I_C;
+  int from, to;
   string empty;
 
   if (argc != 7) {
-    fprintf(stderr, "usage: bin/3d_dbscan_systolic_full R C epsilon epsilon_t minPts emptynet\n");
+    fprintf(stderr, "usage: bin/dbscan_systolic_partial I_R I_C epsilon epsilon_t minPts emptynet\n");
     exit(1);
   }
 
   
-  R = atoi(argv[1]);
-  C = atoi(argv[2]);
+  I_R = atoi(argv[1]);
+  I_C = atoi(argv[2]);
   e = atoi(argv[3]);
   e_t = atoi(argv[4]);
   mp = atoi(argv[5]);
   empty = argv[6];
 
   if (mp <= 1) { fprintf(stderr, "minPts has to be > 1\n"); exit(1); }
-  if (R < 1) { fprintf(stderr, "R has to be > 0\n"); exit(1); }
-  if (C < 1) { fprintf(stderr, "C has to be > 0\n"); exit(1); }
+  if (I_R < 1) { fprintf(stderr, "I_R has to be > 0\n"); exit(1); }
+  if (I_C < 1) { fprintf(stderr, "I_C has to be > 0\n"); exit(1); }
   if (e < 1) { fprintf(stderr, "e has to be > 0\n"); exit(1); }
   if (e_t < 1) { fprintf(stderr, "e_t has to be > 0\n"); exit(1); }
+
+  tc = 2 * e + 1;
+  tr = 4 * e + I_R;
 
   tn = 0;
 
@@ -50,13 +54,13 @@ int main(int argc, char **argv)
 
   /* Make all of the input neurons.
      I'm creating them in column-major order rather than row-major, so the inputs are consecutive
-     starting at zero. (The internals are still row-major). */
+     starting at zero. (The internals are still row-major. */
 
-  for (j = e; j >= -e; j--) {
-    for (i = 0; i < R; i++) {
+  for (j = 0; j < tc; j++) {
+    for (i = 0; i < tr; i++) {
 
       printf("AN %d\n", tn);
-      if (j == e) printf("AI %d\n", tn);
+      if (j == 0) printf("AI %d\n", tn);
       printf("SNP %d Threshold 1\n", tn);
       printf("SETNAME %d I[%d][%d]\n", tn, i, j);
       neuron_numbers["I"][i][j] = tn;
@@ -64,9 +68,9 @@ int main(int argc, char **argv)
     }
   }
 
-  /* The C neurons.  */
+  /* The C neurons.  Now, there is only one C neuron per row, and none in the top and bottom e rows. */
 
-  for (i = 0; i < R; i++) {
+  for (i = e; i < tr-e; i++) {
     j = 0;
     printf("AN %d\n", tn);
     printf("SNP %d Threshold %d\n", tn, mp-1);
@@ -75,25 +79,25 @@ int main(int argc, char **argv)
     tn++;
   }
 
-  /* There are 2e+1 columns of Core neurons, but only the first column are outputs.
+  /* There are 2e+1 columns of Core neurons, but only the first column and middle I_R of them are outputs.
      For that reason, I'm going to create them in column major order. 
-     Plus -- the neurons in all columns but e have thresholds of 1, since they are
+     Plus -- the neurons in all columns but 0 have thresholds of 1, since they are
      simply receiving spikes from their previous column. */
 
-  for (j = e; j >= -e; j--) {
-    for (i = 0; i < R; i++) {
+  for (j = 0; j < tc; j++) {
+    for (i = e; i < tr-e; i++) {
       printf("AN %d\n", tn);
-      printf("SNP %d Threshold %d\n", tn, (j == e) ? 2 : 1);
-      if (j == e) printf("AO %d\n", tn);
+      printf("SNP %d Threshold %d\n", tn, (j == 0) ? 2 : 1);
       printf("SETNAME %d Core[%d][%d]\n", tn, i, j);
+      if (i >= 2*e && i < tr - 2*e && j == 0) printf("AO %d\n", tn);
       neuron_numbers["Core"][i][j] = tn;
       tn++;
     }
   }
 
-  /* Make the B neurons. */
+  /* Make the B neurons - there is just one column of them, and they only exist for the middle I_R rows. */
 
-  for (i = 0; i < R; i++) {
+  for (i = e*2; i < tr-e*2; i++) {
     j = 0;
     printf("AN %d\n", tn);
     printf("SNP %d Threshold 1\n", tn);
@@ -104,7 +108,7 @@ int main(int argc, char **argv)
 
   /* Make the Border output neurons.  Also one column of these. */
 
-  for (i = 0; i < R; i++) {
+  for (i = e*2; i < tr-e*2; i++) {
     j = 0;
     printf("AN %d\n", tn);
     printf("AO %d\n", tn);
@@ -114,13 +118,14 @@ int main(int argc, char **argv)
     tn++;
   }
 
+
   /* Add 2e+1 columns of Input memory neurons. They are parameterized by r, e and e_t.
      Think of these neurons as columns of neurons of size r that persist prior ``frames''  
      of input deeper into the network's execution. Allows for systolic to work temporally, too. */
 
   for (mem_layer = 0; mem_layer < e_t; mem_layer++) {
-    for (j = e; j >= -e; j--) {
-      for (i = 0; i < R; i++) {
+    for (j = 0; j < tc; j++) {
+      for (i = 0; i < tr; i++) {
         printf("AN %d\n", tn);
         printf("SNP %d Threshold 1\n", tn);
         printf("SETNAME %d Mem_I%d[%d][%d]\n", tn, mem_layer, i, j); 
@@ -136,8 +141,8 @@ int main(int argc, char **argv)
   */
 
   for (mem_layer = 0; mem_layer < e_t; mem_layer++) {
-    for (j = e; j >= -e; j--) {
-      for (i = 0; i < R; i++) {
+    for (j = 0; j < tc; j++) {
+      for (i = e; i < tr - e; i++) {
         printf("AN %d\n", tn);
         printf("SNP %d Threshold 1\n", tn);
         printf("SETNAME %d Mem_Core%d[%d][%d]\n", tn, mem_layer, i, j); 
@@ -146,14 +151,14 @@ int main(int argc, char **argv)
       }
     }
   }
-  
+
 
   /* This is a little bit of a hack, but it's going to make life a lot easier.  Create
      entries in neuron_numbers for nodes that don't exist, and set their neuron_number
      to -1. */
 
-  for (i = -e; i <= R + e; i++) {
-    for (j = -2*e; j <= 2*e; j++) {
+  for (i = -e; i < tr + e; i++) {
+    for (j = -e; j < tc + e; j++) {
       if (neuron_numbers["I"].find(i) == neuron_numbers["I"].end() ||
           neuron_numbers["I"][i].find(j) == neuron_numbers["I"][i].end()) {
         neuron_numbers["I"][i][j] = -1;
@@ -178,8 +183,8 @@ int main(int argc, char **argv)
   }
 
   for (mem_layer = 0; mem_layer < e_t; mem_layer++) {
-    for (i = -e; i <= R + e; i++) {
-      for (j = -2*e; j <= 2*e; j++) {
+    for (i = -e; i < tr + e; i++) {
+      for (j = -e; j < tc + e; j++) {
         if (neuron_numbers["Mem_I" + to_string(mem_layer)].find(i) == neuron_numbers["Mem_I" + to_string(mem_layer)].end() ||
             neuron_numbers["Mem_I" + to_string(mem_layer)][i].find(j) == neuron_numbers["Mem_I" + to_string(mem_layer)][i].end()) { 
           neuron_numbers["Mem_I" + to_string(mem_layer)][i][j] = -1; 
@@ -194,10 +199,10 @@ int main(int argc, char **argv)
 
   /* Create the synapses from each I neuron to the next I neuron in the row. */
 
-  for (i = 0; i < R; i++) {
-    for (j = e; j > -e; j--) {
+  for (i = 0; i < tr; i++) {
+    for (j = 0; j < tc; j++) {
       from = neuron_numbers["I"][i][j];
-      to = neuron_numbers["I"][i][j-1];
+      to = neuron_numbers["I"][i][j+1];
       if (to != -1) {
         printf("AE %d %d\n", from, to);
         printf("SEP %d %d Delay 1\n", from, to);
@@ -210,10 +215,10 @@ int main(int argc, char **argv)
     to successive Mem_I cols. This mirrors what is done with the I neurons above */
 
   for (mem_layer = 0; mem_layer < e_t; mem_layer++) { 
-    for (i = 0; i < R; i++) {
-      for (j = e; j > -e; j--) {
+    for (i = 0; i < tr; i++) {
+      for (j = 0; j < tc; j++) {
         from = neuron_numbers["Mem_Core" + to_string(mem_layer)][i][j];
-        to = neuron_numbers["Mem_Core" + to_string(mem_layer)][i][j-1];
+        to = neuron_numbers["Mem_Core" + to_string(mem_layer)][i][j+1];
         if (to != -1) {
           printf("AE %d %d\n", from, to);
           printf("SEP %d %d Delay 1\n", from, to);
@@ -221,7 +226,7 @@ int main(int argc, char **argv)
         }
 
         from = neuron_numbers["Mem_I" + to_string(mem_layer)][i][j];
-        to = neuron_numbers["Mem_I" + to_string(mem_layer)][i][j-1];
+        to = neuron_numbers["Mem_I" + to_string(mem_layer)][i][j+1];
         if (to != -1) {
           printf("AE %d %d\n", from, to);
           printf("SEP %d %d Delay 1\n", from, to);
@@ -237,9 +242,9 @@ int main(int argc, char **argv)
      so that earlier activity may feed back into the current frame.*/
 
   for (mem_layer = 0; mem_layer < e_t; mem_layer++) {
-    for (i = 0; i < R; i++) {
-      j = e; //First col (to which inputs are applied for I neurons)
-      delay = C + (2 * e) + 4; 
+    for (i = 0; i < tr; i++) {
+      j = 0; //First col (to which inputs are applied for I neurons)
+      delay = I_C + (4 * e) + 4; 
 
       if (mem_layer == 0) {
         from = neuron_numbers["I"][i][j];
@@ -271,14 +276,15 @@ int main(int argc, char **argv)
     }
   }
 
+
   /* Create the synapses from each I neuron to the C neurons */
 
-  for (i = 0; i < R; i++) {
-    for (j = e; j >= -e; j--) {
+  for (i = 0; i < tr; i++) {
+    for (j = 0; j < tc; j++) {
       from = neuron_numbers["I"][i][j];
       for (r = -e; r <= e; r++) {
         c = 0;
-        if (r != 0 || j != 0) {
+        if (r != 0 || j != e) {
           to = neuron_numbers["C"][i+r][c];
           if (to != -1) {
             printf("AE %d %d\n", from, to);
@@ -292,8 +298,8 @@ int main(int argc, char **argv)
 
   /* Create the synapses from each Mem_I neuron to the C neurons */
   for (mem_layer = 0; mem_layer < e_t; mem_layer++) {
-    for (i = 0; i < R; i++) {
-      for (j = e; j >= -e; j--) {
+    for (i = 0; i < tr; i++) {
+      for (j = 0; j < tc; j++) {
         from = neuron_numbers["Mem_I" + to_string(mem_layer)][i][j];
         for (r = -e; r <= e; r++) {
           c = 0;
@@ -310,11 +316,12 @@ int main(int argc, char **argv)
     }
   }
 
+
   /* Create the synapses from the center I's, and C neurons, to the output core. */
 
-  for (i = 0; i < R; i++) {
-    from = neuron_numbers["I"][i][0];
-    to = neuron_numbers["Core"][i][e];
+  for (i = e; i < tr-e; i++) {
+    from = neuron_numbers["I"][i][e];
+    to = neuron_numbers["Core"][i][0];
     if (from == -1 || to == -1) {
       fprintf(stderr, "Internal error 1 -- from (%d) or to (%d) = -1\n", from, to);
       exit(1);
@@ -324,7 +331,7 @@ int main(int argc, char **argv)
     printf("SEP %d %d Weight 1\n", from, to);
 
     from = neuron_numbers["C"][i][0];
-    to = neuron_numbers["Core"][i][e];
+    to = neuron_numbers["Core"][i][0];
     if (from == -1 || to == -1) {
       fprintf(stderr, "Internal error 2 -- from (%d) or to (%d) = -1\n", from, to);
       exit(1);
@@ -336,10 +343,10 @@ int main(int argc, char **argv)
 
   /* Create the synapses from each core to the next in line. */
 
-  for (i = 0; i < R; i++) {
-    for (j = e; j > -e; j--) {
-      from = neuron_numbers["Core"][i][j];
-      to = neuron_numbers["Core"][i][j-1];
+  for (i = e; i < tr-e; i++) {
+    for (j = 1; j < tc; j++) {
+      from = neuron_numbers["Core"][i][j-1];
+      to = neuron_numbers["Core"][i][j];
       if (from == -1 || to == -1) {
         fprintf(stderr, "Internal error 3 -- from (%d) or to (%d) = -1\n", from, to);
         exit(1);
@@ -352,12 +359,12 @@ int main(int argc, char **argv)
 
   /* Now from the Cores to the B's. */
 
-  for (i = 0; i < R; i++) {
-    for (j = e; j >= -e; j--) {
+  for (i = e; i < tr-e; i++) {
+    for (j = 0; j < tc; j++) {
       from = neuron_numbers["Core"][i][j];
       for (r = -e; r <= e; r++) {
         c = 0;
-        if (r != 0 || j != 0) {
+        if (r != 0 || j != e) {
           to = neuron_numbers["B"][i+r][c];
           if (to != -1) {
             printf("AE %d %d\n", from, to);
@@ -369,11 +376,10 @@ int main(int argc, char **argv)
     }
   }
 
-
   /* Now from the Mem_Cores to the B's. */
   for (mem_layer = 0; mem_layer < e_t; mem_layer++) {
-    for (i = 0; i < R; i++) {
-      for (j = e; j >= -e; j--) {
+    for (i = e; i < tr - e; i++) {
+      for (j = 0; j < tc; j++) {
         from = neuron_numbers["Mem_Core" + to_string(mem_layer)][i][j];
         for (r = -e; r <= e; r++) {
           c = 0;
@@ -390,10 +396,10 @@ int main(int argc, char **argv)
     }
   }
 
-  /* Finally, from the B's, the center core and the center input to the border */
+  /* Finally, from the B's, the center core and the right input to the border */
 
-  for (i = 0; i < R; i++) {
-    from = neuron_numbers["I"][i][-e];
+  for (i = e*2; i < tr-e*2; i++) {
+    from = neuron_numbers["I"][i][e*2];
     to = neuron_numbers["Border"][i][0];
     if (from == -1 || to == -1) {
       fprintf(stderr, "Internal error 4 -- from (%d) or to (%d) = -1\n", from, to);
@@ -407,7 +413,7 @@ int main(int argc, char **argv)
     printf("SEP %d %d Delay %d\n", from, to, 4);
     printf("SEP %d %d Weight 1\n", from, to);
 
-    from = neuron_numbers["Core"][i][0];
+    from = neuron_numbers["Core"][i][e];
     to = neuron_numbers["Border"][i][0];
     if (from == -1 || to == -1) {
       fprintf(stderr, "Internal error 5 -- from (%d) or to (%d) = -1\n", from, to);

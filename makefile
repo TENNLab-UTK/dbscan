@@ -13,11 +13,16 @@ all: bin/dbscan_flat_full \
      bin/dbscan \
 	 	 bin/3d_dbscan \
 		 bin/3d_dbscan_flat_full \
-		 bin/3d_output_flat \
+		 bin/3d_output_flat_full \
 		 bin/3d_dbscan_systolic_full \
 		 bin/3d_output_systolic_full \
 		 bin/3d_generate_test_grid \
-		 bin/3d_random_dbscan_full
+		 bin/3d_random_dbscan_full \
+		 bin/3d_dbscan_flat_partial \
+		 bin/3d_output_flat_partial \
+		 bin/3d_dbscan_systolic_partial \
+		 bin/3d_output_systolic_partial \
+		 bin/3d_random_dbscan_partial
 
 
 clean:
@@ -35,8 +40,8 @@ bin/3d_dbscan: src/3d_dbscan.cpp
 bin/3d_dbscan_flat_full: src/3d_dbscan_flat_full.cpp
 	$(CXX) $(FLAGS) -o bin/3d_dbscan_flat_full src/3d_dbscan_flat_full.cpp
 
-bin/3d_output_flat: src/3d_output_flat.cpp
-	$(CXX) $(FLAGS) -o bin/3d_output_flat src/3d_output_flat.cpp
+bin/3d_output_flat_full: src/3d_output_flat_full.cpp
+	$(CXX) $(FLAGS) -o bin/3d_output_flat_full src/3d_output_flat_full.cpp
 
 bin/3d_dbscan_systolic_full: src/3d_dbscan_systolic_full.cpp
 	$(CXX) $(FLAGS) -o bin/3d_dbscan_systolic_full src/3d_dbscan_systolic_full.cpp
@@ -49,6 +54,21 @@ bin/3d_generate_test_grid: src/3d_generate_test_grid.cpp
 
 bin/3d_random_dbscan_full: src/3d_random_dbscan_full.cpp
 	$(CXX) $(FLAGS) -Iinclude -std=c++11 -o bin/3d_random_dbscan_full src/3d_random_dbscan_full.cpp
+
+bin/3d_dbscan_flat_partial: src/3d_dbscan_flat_partial.cpp
+	$(CXX) $(FLAGS) -o bin/3d_dbscan_flat_partial src/3d_dbscan_flat_partial.cpp
+
+bin/3d_output_flat_partial: src/3d_output_flat_partial.cpp
+	$(CXX) $(FLAGS) -o bin/3d_output_flat_partial src/3d_output_flat_partial.cpp
+
+bin/3d_dbscan_systolic_partial: src/3d_dbscan_systolic_partial.cpp
+	$(CXX) $(FLAGS) -o bin/3d_dbscan_systolic_partial src/3d_dbscan_systolic_partial.cpp
+
+bin/3d_output_systolic_partial: src/3d_output_systolic_partial.cpp
+	$(CXX) $(FLAGS) -o bin/3d_output_systolic_partial src/3d_output_systolic_partial.cpp
+
+bin/3d_random_dbscan_partial: src/3d_random_dbscan_partial.cpp
+	$(CXX) $(FLAGS) -Iinclude -std=c++11 -o bin/3d_random_dbscan_partial src/3d_random_dbscan_partial.cpp
 
 bin/dbscan_flat_full: src/dbscan_flat_full.cpp
 	$(CXX) $(FLAGS) -o bin/dbscan_flat_full src/dbscan_flat_full.cpp

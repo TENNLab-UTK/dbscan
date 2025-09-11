@@ -1,5 +1,5 @@
-if [ $# -ne 6 ]; then
-  echo 'usage: sh process_3d_dbscan_full.sh epsilon epsilon_time minpoints data_file 3D_FLAT|3D_SYSTOLIC framework_dir' >&2
+if [ $# -ne 10 ]; then
+  echo 'usage: sh process_3d_dbscan_partial.sh epsilon epsilon_time minpoints data_file I_R I_C sr sc 3D_FLAT|3D_SYSTOLIC framework_dir' >&2
   exit 1
 fi
 
@@ -7,8 +7,12 @@ epsilon=$1
 epsilon_time=$2
 minpoints=$3
 datafile=$4
-fs=$5
-fr=$6
+ir=$5
+ic=$6
+sr=$7
+sc=$8
+fs=$9
+#fr=$10
 
 if [ "$fs" != 3D_FLAT -a "$fs" != 3D_SYSTOLIC ]; then
   echo "Fifth parameter must be 3D_FLAT or 3D_SYSTOLIC" >&2
@@ -40,26 +44,11 @@ fi
 
 if [ ! -x $fr/bin/network_tool ]; then exit 1; fi
 
-if [ $fs = 3D_FLAT -a ! -x bin/3d_dbscan_flat_full ]; then make bin/3d_dbscan_flat_full >&2 ; fi
-if [ $fs = 3D_SYSTOLIC -a ! -x bin/3d_dbscan_systolic_full ]; then make bin/3d_dbscan_systolic_full >&2 ; fi
-if [ ! -x bin/create_spikes_full ]; then make bin/create_spikes_full >&2 ; fi
-if [ $fs = 3D_FLAT -a ! -x bin/3d_output_flat_full ]; then make bin/3d_output_flat_full >&2 ; fi
-if [ $fs = 3D_SYSTOLIC -a ! -x bin/3d_output_systolic_full ]; then make bin/3d_output_systolic_full >&2 ; fi
-
-# Calculate rows & cols & num_frames...This is buggy..TODO?
-count=0
-while read p; do
-  if [[ -z $p ]]; then
-    break
-  fi
-  count=$((count + 1))
-done < $datafile
-
-rows=$count
-#echo Rows: $rows
-
-cols=`wc -L $datafile | awk '{ print $1 }'` 
-#echo Cols: $cols
+if [ $fs = 3D_FLAT -a ! -x bin/3d_dbscan_flat_partial ]; then make bin/3d_dbscan_flat_partial >&2 ; fi
+if [ $fs = 3D_SYSTOLIC -a ! -x bin/3d_dbscan_systolic_partial ]; then make bin/3d_dbscan_systolic_partial >&2 ; fi
+if [ ! -x bin/create_spikes_partial ]; then make bin/create_spikes_partial >&2 ; fi
+if [ $fs = 3D_FLAT -a ! -x bin/3d_output_flat_partial ]; then make bin/3d_output_flat_partial >&2 ; fi
+if [ $fs = 3D_SYSTOLIC -a ! -x bin/3d_output_systolic_partial ]; then make bin/3d_output_systolic_partial >&2 ; fi
 
 num_frames=`grep -zop '\d\n\n\d' $datafile | wc -l`
 num_frames=$((num_frames / 3 + 1))
@@ -87,7 +76,7 @@ else
 ( echo M risp
   echo '    { "discrete": true, '
   echo '      "leak_mode": "all", '
-  echo '      "max_delay": '$(($cols + 2 * $epsilon + 4))', '
+  echo '      "max_delay": '$(($ic + 4 * $epsilon + 4))', '
   echo '      "max_threshold": '$minpoints', '
   echo '      "max_weight": 1.0, '
   echo '      "spike_value_factor": 1.0, '
@@ -99,22 +88,18 @@ else
 fi
 
 
-# Next, use dbscan_flat_full to make the network
+# Next, use dbscan_flat_partial to make the network
 
 if [ $fs = 3D_FLAT ]; then
-  bin/3d_dbscan_flat_full $rows $cols $epsilon $epsilon_time $minpoints tmp-empty.txt > tmp-network-tool-commands.txt
+  bin/3d_dbscan_flat_partial $ir $ic $epsilon $epsilon_time $minpoints tmp-empty.txt > tmp-network-tool-commands.txt
 else
-  bin/3d_dbscan_systolic_full $rows $cols $epsilon $epsilon_time $minpoints tmp-empty.txt > tmp-network-tool-commands.txt
+  bin/3d_dbscan_systolic_partial $ir $ic $epsilon $epsilon_time $minpoints tmp-empty.txt > tmp-network-tool-commands.txt
 fi
 
 $fr/bin/network_tool < tmp-network-tool-commands.txt > tmp-dbscan-network.txt
 
 # And use create_spikes to make the input spikes:
-if [ $fs = 3D_FLAT ]; then
-  bin/create_spikes_full $fs < $datafile > tmp-input-spikes.txt
-else
-  bin/create_spikes_full $fs $epsilon < $datafile > tmp-input-spikes.txt
-fi
+bin/create_spikes_partial $ir $ic $sr $sc $epsilon $fs < $datafile > tmp-input-spikes.txt
 
 
 # Calculate the run times and specify the output method:
@@ -123,7 +108,7 @@ if [ $fs = 3D_FLAT ]; then
   rt=$(($num_frames + 4)) #Maybe this should be 5, who can say
   o=OT
 else
-  rt=$(($num_frames*($cols+$epsilon*2+4))) 
+  rt=$(($num_frames*($ic+$epsilon*4+4))) 
   o=OT
 fi
 
@@ -132,7 +117,7 @@ fi
 ( echo ML tmp-dbscan-network.txt ; cat tmp-input-spikes.txt ; echo RUN $rt ; echo $o ) | $pt > tmp-ptool-output.txt
 
 if [ $fs = 3D_FLAT ]; then
-  bin/3d_output_flat_full $rows $cols $num_frames < tmp-ptool-output.txt
+  bin/3d_output_flat_partial $ir $ic $epsilon $num_frames < tmp-ptool-output.txt
 else
-  bin/3d_output_systolic_full $epsilon $rows $cols $num_frames < tmp-ptool-output.txt 
+  bin/3d_output_systolic_partial $ir $ic $epsilon $num_frames < tmp-ptool-output.txt 
 fi
