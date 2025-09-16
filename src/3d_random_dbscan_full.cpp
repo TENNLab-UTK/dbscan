@@ -1,7 +1,7 @@
 /* This program generates a random "full" problem, and the shell commands to run it with
    dbscan, dbscan_flat_full, and dbscan_systolic_full, and test to make sure that they all match. */
 
-/* Charles P. Rizzo, James S. Plank, University of Tennessee, 2024 */
+/* Charles P. Rizzo, James S. Plank, University of Tennessee, 2025 */
 
 #include <string>
 #include <vector>
@@ -38,7 +38,7 @@ int main()
   n = 2*e + 1;
   r = (rng.Random_Double() * (75-n)) + n;
   c = (rng.Random_Double() * (75-n)) + e;
-  frames = (rng.Random_Double() * (75-n)) + n; // TODO:??? 
+  frames = (rng.Random_Double() * (75-n)) + n; 
 
   fill = rng.Random_Double();
 

@@ -22,7 +22,9 @@ all: bin/dbscan_flat_full \
 		 bin/3d_output_flat_partial \
 		 bin/3d_dbscan_systolic_partial \
 		 bin/3d_output_systolic_partial \
-		 bin/3d_random_dbscan_partial
+		 bin/3d_random_dbscan_partial \
+		 bin/ebc_to_frames \
+		 bin/event_viz
 
 
 clean:
@@ -69,6 +71,12 @@ bin/3d_output_systolic_partial: src/3d_output_systolic_partial.cpp
 
 bin/3d_random_dbscan_partial: src/3d_random_dbscan_partial.cpp
 	$(CXX) $(FLAGS) -Iinclude -std=c++11 -o bin/3d_random_dbscan_partial src/3d_random_dbscan_partial.cpp
+
+bin/ebc_to_frames: src/ebc_to_frames.cpp
+	$(CXX) $(FLAGS) -Iinclude -std=c++11 -o bin/ebc_to_frames src/ebc_to_frames.cpp
+
+bin/event_viz: src/event_viz.cpp
+	$(CXX) $(FLAGS) -Iinclude -std=c++11 -o bin/event_viz src/event_viz.cpp
 
 bin/dbscan_flat_full: src/dbscan_flat_full.cpp
 	$(CXX) $(FLAGS) -o bin/dbscan_flat_full src/dbscan_flat_full.cpp

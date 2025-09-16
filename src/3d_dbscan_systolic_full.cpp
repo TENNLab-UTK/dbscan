@@ -1,7 +1,7 @@
 /* This program creates a spiking neural network for performing DBSCAN on an input grid of events,
    using the systolic construction. */
 
-/* Charles P. Rizzo, James S. Plank, University of Tennessee, 2024 */
+/* Charles P. Rizzo, James S. Plank, University of Tennessee, 2025 */
 
 #include <string>
 #include <vector>

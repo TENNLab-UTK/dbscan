@@ -1,7 +1,7 @@
 /* This program creates a spiking neural network for performing DBSCAN on a full input grid of events,
    using the 3D flat construction. */
 
-/* Charles P. Rizzo, James S. Plank, University of Tennessee, 2024 */
+/* Charles P. Rizzo, James S. Plank, University of Tennessee, 2025 */
 
 
 #include <string>

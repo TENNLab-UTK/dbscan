@@ -1,7 +1,7 @@
 /* This program reads the processor_tool output of a systolic dbscan neural network, 
    running on a full input grid, and prints the grid of labeled events. */
 
-/* Charles P. Rizzo, James S. Plank, University of Tennessee, 2024 */
+/* Charles P. Rizzo, James S. Plank, University of Tennessee, 2025 */
 
 #include <string>
 #include <vector>

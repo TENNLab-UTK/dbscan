@@ -763,7 +763,220 @@ UNIX>
 
 
 ------------------
-# TODO:
-- events_to_3d_frames.cpp
-  - Take file of ebc events and do that thang. Use this for testing.
+# 3D DBSCAN
+
+The problem with DBSCAN alone is that it is only a spatial clustering algorithm. What if we also want to correlate and cluster events that are related temporally? A natural extension of the DBSCAN algorithm (or the constructions as we've presented them so far) is a spatiotemporal DBSCAN that we refer to as 3D DBSCAN. Instead of simply looking at a square of events that are within *epsilon* hops away to determine event classification, we now look at a rectangular prism where the third dimension is time. We define a new variable *epislon_time (e_t)* that determines how many frames of events in the past we should consider when making classifications for the events in the current frame at time *t*. Now, if a moving object slows down and starts producing fewer events, those events can still be correctly attributed to the object that was in motion and producing events for the past *e_t* frames.
+
+At a very high level, the implementation works by keeping track of inputs that are applied to the network and core event classifications that are made by the network and then recurrently feeding the prior inputs and core classifications back into the classfication portion of the network at the proper time. Every prior frame of events and core classifications is rerouted back into the classification portion of the network *e_t* times. By adding additional network memory, we can avoid having to communicate several frames of events at each timestep: we only ever need to apply the current frame of events to the network. This is **really** nice from a communication standpoint due to Amdahl's law, and it also serves as a concrete example of the power of recurrence in a spiking neural network.
+
+In this repo, there are 3D implementations of all the prior programs (both full/partial and flat/systolic). There are some additional helper scripts as well. I'll list them out here below:
+
+- `bin/3d_dbscan_flat_full` - Make a flat network that performs the full calculation using the past *e_t* frames.
+- `bin/3d_dbscan_flat_partial` - Make a flat network that performs the partial calculation using the past *e_t* frames.
+- `bin/3d_dbscan_systolic_full` - Make a systolic network that performs the full calculation using the past *e_t* frames.
+- `bin/3d_dbscan_systolic_partial` - Make a systolic network that performs the partial calculation using the past *e_t* frames.
+- `bin/3d_dbscan` - Inefficienct CPU-based implementation of the 3D DBSCAN algorithm.
+- `bin/3d_output_flat_full` - Process the output of a flat network for the full calculation of multiple frames.
+- `bin/3d_output_flat_partial` - Process the output of a flat network for the partial calculation of multiple frames.
+  - **Note:** The output_flat_full and output_flat_partial algorithms are slightly different for the 3D case, so they are separate executables for the 3D implementation.
+- `bin/3d_output_systolic_full` - Process the output of a systolic network for the full calculation of multiple frames.
+- `bin/3d_output_systolic_partial` - Process the output of a systolic network for the partial calculation of multiple frames. 
+- `bin/3d_generate_test_grid` - Generate multiple random frames of events.
+- `bin/3d_random_dbscan_full` - Create a random test (of multiple frames) and run all three full dbscans on it. 
+- `bin/3d_random_dbscan_partial` - Create a random test (of multiple frames) and run all three partial dbscans on it.
+- `bin/ebc_to_frames` - Convert a csv file of event tuples into the dense frame format expected as input for the above programs. (This allows event camera data to be formatted so that the DBSCAN constructions may be applied to them.)
+- `bin/event_viz` - Uses FFMPEG to visualize the effect of the applied 3D DBSCAN algorithm on event camera data for some parameter set [*e*, *e_t*, *mp*]
+- `scripts/process_3d_dbscan_full.sh` - Do a full dbscan test on an input file
+- `scripts/process_3d_dbscan_partial.sh` - Do a partial dbscan test on an input file
+- `scripts/test_3d_full.sh` - Repeatedly call `bin/3d_random_dbscan_full` and make sure that all of the outputs match. 
+- `scripts/test_3d_partial.sh` - Repeatedly call `bin/3d_random_dbscan_partial` and make sure that all of the outputs match.
+- `scripts/aedat_to_csv.py` - Convert an event camera's .aedat4 output file into a csv of event tuples
+- `scripts/make_video.sh` - For some csv event file, this script applies 3D DBSCAN to the events for some set of parameters, creates videos of the non-DBSCAN events and the DBSCAN'ed events, and horizontally concatenates the videos together to demonstrate the effect on the events.
+
+
+Here's a small example in `txt/3d_example.txt` that shows the programs in action. I will only use and show the outputs of the `process_3d_dbscan_full.sh` and `process_3d_dbscan_partial.sh` scripts, but you can manually run the programs they invoke if you want to step through it executable by executable.
+
+
+```
+UNIX> cat txt/3d_example.txt
+000001
+101100
+010000
+111000
+001011
+000100
+
+010001
+000000
+001100
+001100
+000000
+100000
+
+000010
+000110
+001010
+000000
+010000
+000100
+
+000100
+000100
+000000
+010000
+000010
+000000
+
+011000
+010100
+000010
+001000
+000000
+000010
+UNIX> sh scripts/process_3d_dbscan_full.sh 1 1 4 txt/3d_example.txt 3D_FLAT $fr
+......
+B.B...
+.C....
+BCC...
+..C...
+...B..
+
+......
+......
+..CC..
+..CC..
+......
+......
+
+....C.
+...CC.
+..C.C.
+......
+.B....
+......
+
+...C..
+...C..
+......
+.B....
+......
+......
+
+.BC...
+.B.C..
+....B.
+......
+......
+......
+UNIX> sh scripts/process_3d_dbscan_full.sh 1 1 4 txt/3d_example.txt 3D_SYSTOLIC $fr
+......
+B.B...
+.C....
+BCC...
+..C...
+...B..
+
+......
+......
+..CC..
+..CC..
+......
+......
+
+....C.
+...CC.
+..C.C.
+......
+.B....
+......
+
+...C..
+...C..
+......
+.B....
+......
+......
+
+.BC...
+.B.C..
+....B.
+......
+......
+......
+UNIX> sh scripts/process_3d_dbscan_partial.sh 1 1 4 txt/3d_example.txt 2 2 0 0 3D_FLAT $fr  
+..
+B.
+
+..
+..
+
+..
+..
+
+..
+..
+
+.B
+.B
+UNIX> sh scripts/process_3d_dbscan_partial.sh 1 1 4 txt/3d_example.txt 2 2 0 0 3D_SYSTOLIC $fr 
+..
+B.
+
+..
+..
+
+..
+..
+
+..
+..
+
+.B
+.B
+UNIX> sh scripts/process_3d_dbscan_partial.sh 1 1 4 txt/3d_example.txt 2 2 2 2 3D_SYSTOLIC $fr  
+..
+C.
+
+CC
+CC
+
+C.
+..
+
+..
+..
+
+..
+..
+```
+
+To work with event camera data, first convert some .aedat file to a csv file of event tuples. Then, use `scripts/make_video.sh` to visualize both the original events and the dbscan'ed events.
+
+```
+UNIX> python3 -f dvSave.aedat4 > dvSave.csv
+UNIX> ls -la dvSave.csv
+-rw-r--r--@ 1 charlemagne  staff  59039270 Sep 12 13:22 dvSave.csv // The csv files blow up FAST...
+UNIX> sh scripts/make_video.sh
+usage: sh make_video.sh R C e e_t mp csv_event_file segment_time_length [3D_SYSTOLIC, 3D_FLAT] // Optional 3D_FLAT/3D_SYSTOLIC argument if you want
+                                                                                                // to make the network and run the observations through
+                                                                                                // the network. Though, simulating a large network
+                                                                                                // on the CPU for tons of events is taxing both on the
+                                                                                                // processor and RAM...
+UNIX> sh scripts/make_video.sh 260 346 2 4 20 dvSave.csv 16666 // You MUST know the dimensions of the camera that produced the event file.
+                                                                // In our case, it's a DAVIS346, so 346x260. 
+                                                                // We define a segment_time_length of 16666 microseconds, or 16.6ms. The file of events
+                                                                // is split into consecutive event frames that contain 16.6 ms worth of events. We're
+                                                                // processing at 60 FPS, basically...
+                                                            
+Converting csv of events into frames...
+Running conventional 3D DBSCAN on the frames...
+Creating videos...
+loading events ... 
+**A TON of FFMPEG garbage output...**
+UNIX> ls *.mp4
+concat_video.mp4 dbscan_video.mp4 video.mp4
+```
+
+
 - Documentation..
+  - 3D DBSCAN visualization
