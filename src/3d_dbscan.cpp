@@ -120,8 +120,8 @@ int main(int argc, char **argv)
     for (j = 0; j < (int) events[0].size(); j++) {
       for (k = 0; k < (int) events[0][0].size(); k++) {
         ceb[i][j][k] = '.';
+	    }
 	  }
-	}
   }
 
 
