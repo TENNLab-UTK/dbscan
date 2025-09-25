@@ -116,10 +116,13 @@ int main(int argc, char **argv)
 
   ceb = events;
 
-  for (i = 0; i < (int) events.size(); i++) 
-    for (j = 0; j < (int) events[0].size(); j++) 
-      for (k = 0; k < (int) events[0][0].size(); k++) 
+  for (i = 0; i < (int) events.size(); i++) {
+    for (j = 0; j < (int) events[0].size(); j++) {
+      for (k = 0; k < (int) events[0][0].size(); k++) {
         ceb[i][j][k] = '.';
+	  }
+	}
+  }
 
 
     for (i = 0; i < (int) events.size(); i++) {

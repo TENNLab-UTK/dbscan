@@ -6,6 +6,8 @@
 #include <fstream>
 #include <vector>
 #include <unistd.h>
+#include <string.h>
+#include <errno.h>
 #include <sys/wait.h>
 
 using namespace std;
