@@ -953,7 +953,7 @@ C.
 To work with event camera data, first convert some .aedat file to a csv file of event tuples. Then, use `scripts/make_video.sh` to visualize both the original events and the dbscan'ed events.
 
 ```
-UNIX> python3 -f dvSave.aedat4 > dvSave.csv
+UNIX> python3 aedat_to_csv.py -f dvSave.aedat4 > dvSave.csv
 UNIX> ls -la dvSave.csv
 -rw-r--r--@ 1 charlemagne  staff  59039270 Sep 12 13:22 dvSave.csv // The csv files blow up FAST...
 UNIX> sh scripts/make_video.sh
