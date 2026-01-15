@@ -61,8 +61,9 @@ rows=$count
 cols=`wc -L $datafile | awk '{ print $1 }'` 
 #echo Cols: $cols
 
-num_frames=`grep -zop '\d\n\n\d' $datafile | wc -l`
-num_frames=$((num_frames / 3 + 1))
+num_frames=`grep -E '^$^$' $datafile | wc -l`
+#num_frames=`grep -zop '\d\n\n\d' $datafile | wc -l` #NOT POSIX-COMPLIANT!
+#num_frames=$((num_frames / 3 + 1))
 #echo Num_Frames: $num_frames
 
 
