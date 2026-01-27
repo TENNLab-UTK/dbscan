@@ -17,13 +17,22 @@
 #include "MOA.hpp"
 using namespace std;
 
-int main()
+int main(int argc, char **argv)
 {
   int r, c, sr, sc, ir, ic, i, j, n, frames, k;
   int e, e_t, mp;
   double fill;
   neuro::MOA rng;
   FILE *f;
+  bool stream;
+
+  (void)argv;
+
+  if (argc > 1){
+    stream = true;
+  }else{
+    stream = false;
+  }
 
   f = fopen("tmp-data.txt", "w");
 
@@ -58,17 +67,36 @@ int main()
   }
   fclose(f);
 
-  printf("echo e=%d e_t=%d minPts=%d R=%d C=%d I_R=%d I_C=%d S_R=%d S_C=%d Frames=%d\n", e, e_t, mp, r, c, ir, ic, sr, sc, frames);
-  printf("sh scripts/process_3d_dbscan_partial.sh %d %d %d tmp-data.txt %d %d %d %d 3D_FLAT $fr > %s\n", 
-            e, e_t, mp, ir, ic, sr, sc, "tmp-o1.txt");
-  printf("( echo FJ tmp-dbscan-network.txt; echo INFO ) | $fr/bin/network_tool | egrep 'No|Ed'\n");
-  printf("sh scripts/process_3d_dbscan_partial.sh %d %d %d tmp-data.txt %d %d %d %d 3D_SYSTOLIC $fr > %s\n", 
-            e, e_t, mp, ir, ic, sr, sc, "tmp-o2.txt");
-  printf("( echo FJ tmp-dbscan-network.txt; echo INFO ) | $fr/bin/network_tool | egrep 'No|Ed'\n");
-  printf("bin/3d_dbscan %d %d %d tmp-data.txt %d %d %d %d > tmp-o3.txt\n", e, e_t, mp, ir, ic, sr, sc);
-  printf("d1=`diff tmp-o1.txt tmp-o2.txt | wc | awk '{ print $1 }'`\n");
-  printf("d2=`diff tmp-o1.txt tmp-o3.txt | wc | awk '{ print $1 }'`\n");
-  printf("if [ $d1 = 0 -a $d2 = 0 ]; then echo ok; else echo no; fi\n");
+
+  if (stream) {
+    sr = 0;
+    sc = 0;
+    printf("echo STREAMING!\n");
+    printf("echo e=%d e_t=%d minPts=%d R=%d C=%d I_R=%d I_C=%d S_R=%d S_C=%d Frames=%d\n", e, e_t, mp, r, c, ir, ic, sr, sc, frames);
+    printf("sh scripts/process_3d_dbscan_partial.sh %d %d %d tmp-data.txt %d %d %d %d 3D_FLAT_STREAM $fr > %s\n", 
+              e, e_t, mp, ir, ic, sr, sc, "tmp-o1.txt");
+    printf("( echo FJ tmp-dbscan-network.txt; echo INFO ) | $fr/bin/network_tool | egrep 'No|Ed'\n");
+    printf("sh scripts/process_3d_dbscan_partial.sh %d %d %d tmp-data.txt %d %d %d %d 3D_SYSTOLIC_STREAM $fr > %s\n", 
+              e, e_t, mp, ir, ic, sr, sc, "tmp-o2.txt");
+    printf("( echo FJ tmp-dbscan-network.txt; echo INFO ) | $fr/bin/network_tool | egrep 'No|Ed'\n");
+    printf("bin/3d_dbscan %d %d %d tmp-data.txt %d %d %d %d > tmp-o3.txt\n", e, e_t, mp, r, c, sr, sc);
+    printf("d1=`diff tmp-o1.txt tmp-o2.txt | wc | awk '{ print $1 }'`\n");
+    printf("d2=`diff tmp-o1.txt tmp-o3.txt | wc | awk '{ print $1 }'`\n");
+    printf("if [ $d1 = 0 -a $d2 = 0 ]; then echo ok; else echo no; fi\n");
+  } else{
+    printf("echo NOT STREAMING!\n");
+    printf("echo e=%d e_t=%d minPts=%d R=%d C=%d I_R=%d I_C=%d S_R=%d S_C=%d Frames=%d\n", e, e_t, mp, r, c, ir, ic, sr, sc, frames);
+    printf("sh scripts/process_3d_dbscan_partial.sh %d %d %d tmp-data.txt %d %d %d %d 3D_FLAT $fr > %s\n", 
+              e, e_t, mp, ir, ic, sr, sc, "tmp-o1.txt");
+    printf("( echo FJ tmp-dbscan-network.txt; echo INFO ) | $fr/bin/network_tool | egrep 'No|Ed'\n");
+    printf("sh scripts/process_3d_dbscan_partial.sh %d %d %d tmp-data.txt %d %d %d %d 3D_SYSTOLIC $fr > %s\n", 
+              e, e_t, mp, ir, ic, sr, sc, "tmp-o2.txt");
+    printf("( echo FJ tmp-dbscan-network.txt; echo INFO ) | $fr/bin/network_tool | egrep 'No|Ed'\n");
+    printf("bin/3d_dbscan %d %d %d tmp-data.txt %d %d %d %d > tmp-o3.txt\n", e, e_t, mp, ir, ic, sr, sc);
+    printf("d1=`diff tmp-o1.txt tmp-o2.txt | wc | awk '{ print $1 }'`\n");
+    printf("d2=`diff tmp-o1.txt tmp-o3.txt | wc | awk '{ print $1 }'`\n");
+    printf("if [ $d1 = 0 -a $d2 = 0 ]; then echo ok; else echo no; fi\n");
+  }
 
   return 0;
 }

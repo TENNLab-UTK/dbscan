@@ -2,7 +2,7 @@
   { "node_properties": [
       { "name":"Threshold", "type":73, "index":0, "size":1, "min_value":1.0, "max_value":7.0 }],
     "edge_properties": [
-      { "name":"Delay", "type":73, "index":1, "size":1, "min_value":1.0, "max_value":150.0 },
+      { "name":"Delay", "type":73, "index":1, "size":1, "min_value":1.0, "max_value":500.0 },
       { "name":"Weight", "type":73, "index":0, "size":1, "min_value":-1.0, "max_value":1.0 }],
     "network_properties": [] },
  "Nodes": [],
@@ -16,7 +16,7 @@
       { "discrete": true,
         "fire_like_ravens": false,
         "leak_mode": "all",
-        "max_delay": 150,
+        "max_delay": 500,
         "max_threshold": 7.0,
         "max_weight": 1.0,
         "min_potential": 0.0,

@@ -24,7 +24,11 @@ all: bin/dbscan_flat_full \
 		 bin/3d_output_systolic_partial \
 		 bin/3d_random_dbscan_partial \
 		 bin/ebc_to_frames \
-		 bin/event_viz
+		 bin/event_viz \
+		 bin/3d_output_flat_partial_stream \
+		 bin/3d_output_systolic_partial_stream \
+		 bin/3d_dbscan_flat_partial_stream \
+		 bin/3d_dbscan_systolic_partial_stream 
 
 
 clean:
@@ -113,3 +117,15 @@ bin/random_dbscan_partial: src/random_dbscan_partial.cpp
 
 bin/generate_test_grid: src/generate_test_grid.cpp
 	$(CXX) $(FLAGS) -Iinclude -std=c++11 -o bin/generate_test_grid src/generate_test_grid.cpp
+
+bin/3d_output_flat_partial_stream: src/3d_output_flat_partial_stream.cpp
+	$(CXX) $(FLAGS) -o bin/3d_output_flat_partial_stream src/3d_output_flat_partial_stream.cpp
+
+bin/3d_output_systolic_partial_stream: src/3d_output_systolic_partial_stream.cpp
+	$(CXX) $(FLAGS) -o bin/3d_output_systolic_partial_stream src/3d_output_systolic_partial_stream.cpp
+
+bin/3d_dbscan_flat_partial_stream: src/3d_dbscan_flat_partial_stream.cpp
+	$(CXX) $(FLAGS) -o bin/3d_dbscan_flat_partial_stream src/3d_dbscan_flat_partial_stream.cpp
+
+bin/3d_dbscan_systolic_partial_stream: src/3d_dbscan_systolic_partial_stream.cpp
+	$(CXX) $(FLAGS) -o bin/3d_dbscan_systolic_partial_stream src/3d_dbscan_systolic_partial_stream.cpp
