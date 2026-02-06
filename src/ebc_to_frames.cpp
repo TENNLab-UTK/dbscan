@@ -62,6 +62,14 @@ int main(int argc, char **argv)
       fprintf(stderr,"Trouble parsing line: %s\n\nExpected format is: time,x,y,polarity\n",line.c_str());
       exit(1);
     }
+    if(x < 0 || x >= c){
+      fprintf(stderr,"Bad value for x (column value): %d.\n0 <= x < %d\n",x,c);
+      exit(1);
+    }
+    if(y < 0 || y >= r){
+      fprintf(stderr,"Bad value for y (row value): %d.\n0 <= y < %d\n",y,r);
+      exit(1);
+    }
 
     if(first){
         observation_start_time = time;

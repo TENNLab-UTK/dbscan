@@ -950,6 +950,95 @@ C.
 ..
 ```
 
+------------------
+## A streaming implementation of 3D DBSCAN for real-time deployment on resource-constrained hardware
+
+If your goal is to deploy a 3D DBSCAN network to some embedded hardware, it's likely that resources will be scarce (relative to the size of the full-sized DBSCAN networks). In these cases, you'll want to use the partial DBSCAN network implementations. However, specific to 3D DBSCAN, what if you want to process an entire frame before processing the next frame instead of *only* processing a subregion of the frame over time? This would require setting up delays specifically so that the same subregion in prior frames influences the classifications made in same subregion for the current frame. Functionally, this requires precisely timing when prior events are rerouted back into the compute portion of the network so that we can keep processing frames over time and the latency hit is minimal. We don't care about this for conventional, 2D DBSCAN because there's no interframe or temporal dependency, so subregions of the current frame must simply be split up and doled out to the network. This can be done with the programs that exist in this repo without the need for new ones.
+
+I'll motivate with the example in `txt/3d_example.txt`. 
+
+### Flat Algorithm
+
+Let's suppose $\epsilon = 1,\epsilon_{t} = 2,minPoints=4$. Additionally, suppose $IR = 2, IC=2$ for partial, flat DBSCAN.
+
+To process one entire 6x6 frame with a 2x2 DBSCAN kernel, it will take $ceil(R/IR) * ceil(C/IC) + 4 = ceil(6/2) * ceil(6/2) + 4 = 13$ timesteps. This is because we get perfect pipelining with our flat DBSCAN implementation, and the $+ 4$ term is us having to wait 4 timesteps after the application of the last subregion before we know our final classification.
+
+In other words, for flat, partial 3D DBSCAN, our frame latency is: $ceil(R/IR) * ceil(C/IC) + 4$. 
+
+However, because of perfect pipelining, we can begin processing the next frame for our 3D DBSCAN implementation after $ceil(R/IR) * ceil(C/IC)$ timesteps without needing to wait the 4 timesteps.
+
+In other words, for flat, partial 3D DBSCAN, our frame throughput is: $ceil(R/IR) * ceil(C/IC)$.
+
+Okay, back to our 6x6 example. Suppose we provide as input at frame 0 the 2x2 subregion starting at row 0 col 0. For 3D DBSCAN, when we start processing frame 1 (whose classifications depend on frame 0) at the same 2x2 subregion starting at 0,0 , we want to make sure that the events and core classifications from frame 0 at subregion 0,0 properly influence the event classifications at subregion 0,0 for frame 1 **without** needing to reapply them as inputs to the network. This means that when we apply the subregion at 0,0 for frame 1 at timestep 9, the events and core classifications from 0,0 at frame 0 must also be considered. So we set the delays from the $Input$ neurons to the $Input_Mem$ neurons (and $Input_Mem$ neurons to successive layers of $Input_Mem$ neurons as governed by $e_{t}$) to 9. The same is the case for the $Core$ and $Core_Mem$ neurons.
+
+### Systolic Algorithm
+
+Let's suppose $\epsilon = 1,\epsilon_{t} = 2,minPoints=4$. Additionally, suppose $IR = 2$ for partial, systolic DBSCAN.
+
+To process one entire 6x6 frame with a 2-row systolic DBSCAN kernel, it will take $ceil(R/IR) * (C + 4\epsilon) + 4 = ceil(6/2) * (6 + 4(1)) + 4 = 34$ timesteps. We can still pipeline with the systolic appraoch, but after the application of each row grouping, we must wait $4\epsilon$ timesteps for the network to clear out. The $+ 4$ term is us having to wait 4 timesteps after the application of the last column before we know our final classification for the last column.
+
+In other words, for systolic, partial 3D DBSCAN, our frame latency is: $ceil(R/IR) * (C + 4\epsilon) + 4$.
+
+However, because of pipelining, we can begin processing the next frame for our 3D DBSCAN implementation after $ceil(R/IR) * (C + 4\epsilon)$ timesteps without needing to wait the 4 timesteps.
+
+In other words, for systolic, partial 3D DBSCAN, our frame throughput is: $ceil(R/IR) * (C + 4\epsilon)$.
+
+Okay, back to our 6x6 example. Suppose we provide as input at frame 0 the first two rows: rows 0 and 1. For 3D DBSCAN, when we start processing frame 1 (whose classifications depend on frame 0) at rows 0 and 1, we want to make sure that the events and core classifications from frame 0 at rows 0 and 1 properly influence the event classifications at rows 0 and 1 for frame 1 **without** needing to reapply them as inputs to the network. This means that when we apply rows 0 and 1 as input for frame 1 at timestep 30, the events and core classifications rows 0 and 1 at frame 0 must also be considered. So we set the delays from the $Input$ neurons to the $Input_Mem$ neurons (and $Input_Mem$ neurons to successive layers of $Input_Mem$ neurons as governed by $e_{t}$) to 30. The same is the case for the $Core$ and $Core_Mem$ neurons.
+
+And so, to make networks that do this, you'd use programs:
+- `bin/3d_dbscan_flat_partial_stream`
+- `bin/3d_dbscan_systolic_partial_stream`
+- `bin/3d_output_flat_partial_stream`
+- `bin/3d_output_systolic_partial_stream` 
+
+Both `bin/create_spikes_partial` and `bin/3d_random_dbscan_partial` have been amended to support this partial streaming methodology.
+
+You can also use `scripts/process_3d_dbscan_partial.sh` with options `3D_FLAT_STREAM|3D_SYSTOLIC_STREAM|3D_SYSTOLIC_STREAM_AS`, just as the prior workflows have shown (in this case `sr` and `sc` are assumed to be 0 and 0 regardless of what the user specifies because we're processing the entire frame(s) and not just a subregion at `sr` `sc`).
+
+```
+UNIX> sh scripts/process_3d_dbscan_partial.sh 3 2 4 txt/3d_example.txt 4 2 0 0 3D_SYSTOLIC_STREAM ../framework 
+.....C
+C.CC..
+.C....
+CCC...
+..C.CC
+...C..
+
+.C...C
+......
+..CC..
+..CC..
+......
+C.....
+
+....C.
+...CC.
+..C.C.
+......
+.C....
+...C..
+
+...C..
+...C..
+......
+.C....
+....C.
+......
+
+.CC...
+.C.C..
+....C.
+..C...
+......
+....C.
+
+
+```
+
+
+------------------
+# Visualizing the Effect of DBSCAN on your Data
+
 To work with event camera data, first convert some .aedat file to a csv file of event tuples. Then, use `scripts/make_video.sh` to visualize both the original events and the dbscan'ed events.
 
 ```
@@ -977,6 +1066,3 @@ UNIX> ls *.mp4
 concat_video.mp4 dbscan_video.mp4 video.mp4
 ```
 
-
-- Documentation..
-  - 3D DBSCAN visualization

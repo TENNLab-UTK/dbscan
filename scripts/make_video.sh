@@ -63,8 +63,10 @@ echo "Running conventional 3D DBSCAN on the frames..."
 ./bin/3d_dbscan $e $e_t $mp tmp_frames.txt $r $c 0 0 > tmp_dbscanned_frames.txt
 
 if [ "$fs" = "3D_SYSTOLIC" ]; then
+  #I'm not sure this method (following two lines) to calculate num_frames is posix-compliant
   num_frames=`grep -zop '\d\n\n\d' tmp_frames.txt | wc -l`
   num_frames=$((num_frames / 3 + 1))
+  #num_frames=`grep -E '^$^$' tmp_frames.txt | wc -l`   <-- this will work too, BUT your file tmp_frames.txt needs to have 2 blank lines at the end..
 
   echo "Creating 3D Systolic network and running data through it. This will likely take some time..."
   # Apply dbscan with a systolic network for yucks
@@ -89,8 +91,10 @@ if [ "$fs" = "3D_SYSTOLIC" ]; then
 fi
 
 if [ "$fs" = "3D_FLAT" ]; then
+  #I'm not sure this method (following two lines) to calculate num_frames is posix-compliant
   num_frames=`grep -zop '\d\n\n\d' tmp_frames.txt | wc -l`
   num_frames=$((num_frames / 3 + 1))
+    #num_frames=`grep -E '^$^$' tmp_frames.txt | wc -l`   <-- this will work too, BUT your file tmp_frames.txt needs to have 2 blank lines at the end..
 
   echo "Creating 3D Flat network and running data through it. This will likely take some time..."
   # Apply dbscan with a Flat network for yucks
